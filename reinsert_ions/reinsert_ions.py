@@ -12,7 +12,7 @@ import sys
 import typing as tp
 import subprocess as sp
 import os
-
+import sys
 import MDAnalysis as mda
 import numpy as np
 
@@ -35,7 +35,7 @@ def get_clay_sel_str(*uc_stem: str) -> mda.AtomGroup:
     else:
         clay_sel_strs = ('not ', ' '.join(['SOL', 'iSL', 'GLY',
                                            'Ca', 'Mg', 'Na',
-                                           'K', 'Cl']))
+                                           'K', 'Cl','Cs']))
         print(clay_sel_strs)
     clay_sel_str = ('{}resname {}*'.format(*clay_sel_strs))
     return clay_sel_str
@@ -269,7 +269,7 @@ def add_ion_replacement_waters(grofile: str, outgro: str, positions: str,
     :rtype: None
 
     """
-    run_gmx_insert_molecules(grofile, 'spc_mol.gro', outgro, nmols,
+    run_gmx_insert_molecules(grofile, 'scripts/reinsert_ions/spc_mol.gro', outgro, nmols,
                              pos=positions, scale=scale, radius=radius)
 
 
@@ -437,3 +437,22 @@ def reorder_gro(ingro, reorder_list):
         i += 1
    
     reindex_resnr(ingro)       
+
+
+
+if __name__ == "__main__":
+	if(len(sys.argv)<2):
+		print("Usage:\n topology_path, gro_path, out_gro_path, ions to move in order appear in topology")
+		print("e.g. $ python3 reinsert_ions.py topo.top in.gro out.gro Cs Cl")
+	
+	topo_path = sys.argv[1]
+	gro_path = sys.argv[2]
+	out_gro_path =sys.argv[3]
+	ions_to_move = sys.argv[4:]	
+
+	print(topo_path,gro_path)
+	u = mda.Universe(topo_path,gro_path,topology_format='ITP')
+
+	substitute_bulk_ions_gro(u,ions_to_move,out_gro_path)
+	
+	reorder_gro(out_gro_path,ions_to_move)
