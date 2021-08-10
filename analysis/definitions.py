@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
 
+import sys
 #%%
 
 # from trial1.py
@@ -305,7 +306,7 @@ def charge_density(top, traj, atoms, dyn):
 # RDF
 from MDAnalysis.analysis import rdf
 
-def average_rdf(atomgroup1, atomgroup2, bins, rdf_range):
+def average_rdf(atomgroup1, atomgroup2, bins=75, rdf_range=(0.0,15.0)):
     '''Plots the average radial distribution function for two AtomGroups
     Parameters
     -----------
@@ -315,7 +316,7 @@ def average_rdf(atomgroup1, atomgroup2, bins, rdf_range):
     
     bins: number of bins in the histogram. For default use 75
     
-    rdf_range: spherical shell limit around each atom. two numbers need to be given in form (?.?, ?.?). For default use (0.0, 15.0)
+    rdf_range: spherical shell limit around each atom. two numbers need to be given in form (min_limit, max_limit).
     
     Returns
     --------
@@ -328,161 +329,161 @@ def average_rdf(atomgroup1, atomgroup2, bins, rdf_range):
     plt.ylabel('Radial distribution')
     return av_rdf_plot
 
-def intraAG_average_rdf(atomgroup1, bins, rdf_range, exclusion):
-    '''Plots the average radial distribution function for an AtomGroup to iself
-    Parameters
-    -----------
-    atomgroup1: AtomGroup being investigated
-    
-    bins: number of bins in the histogram. For default use 75
-    
-    rdf_range: spherical shell limit around each atom. Two numbers need to be given in form (?.?, ?.?). For default use (0.0, 15.0)
-    
-    exclusion: mask pairs within the same chunk of atoms. Two numbers to be given in the form (?, ?) which represents the size of the chunk excluded and does not need to be square. E.g. for the interaction between water molcules, give (3, 3) 
-    
-    Returns
-    --------
-    Plot of radius vs rdf'''
-    ag_av_rdf=rdf.InterRDF(atomgroup1, atomgroup1, 
-                        nbins=bins,
-                        range=rdf_range, exclusion_block=(exclusion)).run()
-    ag_av_rdf_plot=plt.plot(ag_av_rdf.bins, ag_av_rdf.rdf)
-    plt.xlabel('Radius (Å)')
-    plt.ylabel('Radial distribution')
-    return ag_av_rdf_plot
-    
-
-def specific_rdf(universe, atom_pairs, bins, rdf_range, dens):
-    '''Calculates the site-specific radial distribution function. Users can then choose to create .csv files and graphs of the outputs.
-    This function can take a long time to run before an output is given.
-    
-    Parameters
-    -----------
-    universe: universe atomgroups are in
-    
-    atom_pairs: list of pairs of AtomGroups e.g. [[g1, g2], [g3, g4]] where g1 and g2 are two atomgroups whose interaction is under investigation
-    
-    bins: number of bins in the histogram. For default use 75
-    
-    rdf_range: spherical shell limit around each atom. two numbers need to be given in form (?.?, ?.?). For default use (0.0, 15.0)
-    
-    dens: if True, final density is averaged. if False, density not average so harder to compare between different sizes of AtomGroups
-    
-    Returns
-    ----------
-    If the user wishes, .csv files and graphs can be created
-    '''
-    print('The function "specific_rdf" is executing...')
-    ss_rdf=rdf.InterRDF_s(universe, atom_pairs,
-                          nbins=bins,
-                          range=rdf_range,
-                          density=dens).run()
-    
-    print(' ')
-    i=0
-    for list_i in atom_pairs:
-        print(' ')
-        print('Result array of', list_i, 'with Atom_pairs index of', i, 'has shape: {}'.format(ss_rdf.rdf[i].shape))
-        l, m, nbin = np.nonzero(ss_rdf.rdf[i])
-        save=input('Do you want to save the indices of the atom numbers where there are non-zero values for this array? (y/n): ')
-        if save == 'y':
-            file_name1=input('Enter the name for the file containing indices for atom 1. Must end in .csv : ')
-            np.savetxt(file_name1, l, delimiter=' ', fmt='%d')
-            file_name2=input('Enter the name for the file containing indices for atom 2. Must end in .csv : ')
-            np.savetxt(file_name2, m, delimiter=' ', fmt='%d')
-        
-        print('--------------------')    
-        i += 1
-    
-    print(' ')
-    end_plot=input("Do you want to plot a graph? (y/n): ")
-    
-    while end_plot == 'y':
-    
-        i=int(input("Index of AtomGroup pair in atom_pairs: "))
-        j=int(input("Index of atom 1: "))
-        k=int(input("Index of atom 2: "))
-    
-        fig, fig_name=plt.subplots()
-        fig_name.plot(ss_rdf.bins, ss_rdf.rdf[i][j][k])
-        fig_name.set_xlabel('Radius (Å)')
-        fig_name.set_ylabel('Radial Distribution Function')
-        fig_name.set_title(input("Enter a title: "))
-
-        print('--------------------') 
-        print(' ')
-        end_plot=input("Do you want to continue plotting? (y/n): ")
-    
-    print(' ')
-    print('Thank you for using this function. Have a nice day!')
+#def intraAG_average_rdf(atomgroup1, bins=75, rdf_range=(0.0,15.0), exclusion=None):
+#    '''Plots the average radial distribution function for an AtomGroup to iself
+#    Parameters
+#    -----------
+#    atomgroup1: AtomGroup being investigated
+#    
+#    bins: number of bins in the histogram. For default use 75
+#    
+#    rdf_range: spherical shell limit around each atom. Two numbers need to be given in form (min_limit, max_limit). For default use (0.0, 15.0)
+#    
+#    exclusion: mask pairs within the same chunk of atoms. Two numbers to be given in the form (?, ?) which represents the size of the chunk excluded and does not need to be square. E.g. for the interaction between water molcules, give (3, 3) 
+#    
+#    Returns
+#    --------
+#    Plot of radius vs rdf'''
+#    ag_av_rdf=rdf.InterRDF(atomgroup1, atomgroup1, 
+#                        nbins=bins,
+#                        range=rdf_range, exclusion_block=(exclusion)).run()
+#    ag_av_rdf_plot=plt.plot(ag_av_rdf.bins, ag_av_rdf.rdf)
+#    plt.xlabel('Radius (Å)')
+#    plt.ylabel('Radial distribution')
+#    return ag_av_rdf_plot
+#    
+#
+#def specific_rdf(universe, atom_pairs, bins=75, rdf_range=(0.0,15.0), dens=True):
+#    '''Calculates the site-specific radial distribution function. Users can then choose to create .csv files and graphs of the outputs.
+#    This function can take a long time to run before an output is given.
+#    
+#    Parameters
+#    -----------
+#    universe: universe atomgroups are in
+#    
+#    atom_pairs: list of pairs of AtomGroups e.g. [[g1, g2], [g3, g4]] where g1 and g2 are two atomgroups whose interaction is under investigation
+#    
+#    bins: number of bins in the histogram. For default use 75
+#    
+#    rdf_range: spherical shell limit around each atom. two numbers need to be given in form (?.?, ?.?). For default use (0.0, 15.0)
+#    
+#    dens: if True, final density is averaged. if False, density not average so harder to compare between different sizes of AtomGroups
+#    
+#    Returns
+#    ----------
+#    If the user wishes, .csv files and graphs can be created
+#    '''
+#    print('The function "specific_rdf" is executing...')
+#    ss_rdf=rdf.InterRDF_s(universe, atom_pairs,
+#                          nbins=bins,
+#                          range=rdf_range,
+#                          density=dens).run()
+#    
+#    print(' ')
+#    i=0
+#    for list_i in atom_pairs:
+#        print(' ')
+#        print('Result array of', list_i, 'with Atom_pairs index of', i, 'has shape: {}'.format(ss_rdf.rdf[i].shape))
+#        l, m, nbin = np.nonzero(ss_rdf.rdf[i])
+#        save=input('Do you want to save the indices of the atom numbers where there are non-zero values for this array? (y/n): ')
+#        if save == 'y':
+#            file_name1=input('Enter the name for the file containing indices for atom 1. Must end in .csv : ')
+#            np.savetxt(file_name1, l, delimiter=' ', fmt='%d')
+#            file_name2=input('Enter the name for the file containing indices for atom 2. Must end in .csv : ')
+#            np.savetxt(file_name2, m, delimiter=' ', fmt='%d')
+#        
+#        print('--------------------')    
+#        i += 1
+#    
+#    print(' ')
+#    end_plot=input("Do you want to plot a graph? (y/n): ")
+#    
+#    while end_plot == 'y':
+#    
+#        i=int(input("Index of AtomGroup pair in atom_pairs: "))
+#        j=int(input("Index of atom 1: "))
+#        k=int(input("Index of atom 2: "))
+#    
+#        fig, fig_name=plt.subplots()
+#        fig_name.plot(ss_rdf.bins, ss_rdf.rdf[i][j][k])
+#        fig_name.set_xlabel('Radius (Å)')
+#        fig_name.set_ylabel('Radial Distribution Function')
+#        fig_name.set_title(input("Enter a title: "))
+#
+#        print('--------------------') 
+#        print(' ')
+#        end_plot=input("Do you want to continue plotting? (y/n): ")
+#    
+#    print(' ')
+#    print('Thank you for using this function. Have a nice day!')
 
 #%%
 
-# MSD
-from MDAnalysis.analysis import msd
-
-from scipy.stats import linregress
-from scipy.stats import t
-
-def mean_sq_disp(u, selection, dimension, algorithm):
-    '''Calculates and plots the mean-squared displacement using the Einstein relation. Estimates the diffusion coefficient using a linear model of the MSD.
-    WARNING: This function only works in MDAnalysis version 2.0.0 and higher
-    
-    Parameters
-    -----------
-    u: universe or (non-updating)AtomGroup
-    
-    selection: atom selection to calculate the msd for. Default is all
-    
-    dimension: desired dimension of the msd. Option are 'xyz', 'xy', 'yz', 'xz', 'x', 'y', 'z'. Default is xyz
-    
-    algorithm: if True, the fast FFT algorithm is used and tidynamics package is required. If False the simple 'windowed algorithm is used'''
-    
-    
-    MSD = msd.EinsteinMSD(u, select=selection, msd_type=dimension, fft=algorithm).run()
-    
-    nframes = MSD.n_frames
-    print(' ')
-    print('To calculate the time between frames use: dt x nstxout (from .mdp)')
-    timestep=float(input('What is the time between frames? Give answer in nanoseconds: '))
-    sim_time = np.arange(nframes)*timestep
-    
-    fig, fig_name=plt.subplots()
-    fig_name.plot(sim_time, MSD.results.timeseries)
-    fig_name.set_xlabel('Simulation time (ns)')
-    fig_name.set_ylabel('Mean-Squared Displacement')
-    fig_name.set_title(input("Enter a title: "))
-    plt.show()
-    
-    start_time = int(input('What is the time at the start of the linear portion? '))
-    start_index = int(start_time/timestep)
-    end_time = int(input('What is the time at the end of the linear portion? '))
-    end_index = int(end_time/timestep)
-    linear_model = linregress(sim_time[start_index:end_index],
-                              MSD.results.timeseries[start_index:end_index])
-    
-    fig, linear_plot=plt.subplots()
-    linear_plot.plot(sim_time, linear_model.intercept + linear_model.slope*sim_time)
-    linear_plot.set_xlabel('Simulation time (ns)')
-    linear_plot.set_ylabel('Mean-Squared Displacement')
-    linear_plot.set_title('Linear model of MSD')
-    plt.show()
-    
-    slope = linear_model.slope
-    error = linear_model.rvalue
-    
-    D = slope*1/(2*MSD.dim_fac)
-
-    # Two-sided inverse Students t-distribution
-    # p - probability, df - degrees of freedom
-    tinv = lambda p, df: abs(t.ppf(p/2, df))   
-    ts = tinv(0.05, len(sim_time)-2)
-
-    print(' ')
-    print(f'The coefficient of determination (R-squared) of the linear model is: {error**2:.6f}')
-    print('The diffusion coefficient is estimated to be: ', D)
-    print(f'The 95% confidence interval on the slope is: {slope:.6f} +/- {ts*linear_model.stderr:.6f}")')
-
+## MSD
+#from MDAnalysis.analysis import msd
+#
+#from scipy.stats import linregress
+#from scipy.stats import t
+#
+#def mean_sq_disp(u, selection, dimension, algorithm):
+#    '''Calculates and plots the mean-squared displacement using the Einstein relation. Estimates the diffusion coefficient using a linear model of the MSD.
+#    WARNING: This function only works in MDAnalysis version 2.0.0 and higher
+#    
+#    Parameters
+#    -----------
+#    u: universe or (non-updating)AtomGroup
+#    
+#    selection: atom selection to calculate the msd for. Default is all
+#    
+#    dimension: desired dimension of the msd. Option are 'xyz', 'xy', 'yz', 'xz', 'x', 'y', 'z'. Default is xyz
+#    
+#    algorithm: if True, the fast FFT algorithm is used and tidynamics package is required. If False the simple 'windowed algorithm is used'''
+#    
+#    
+#    MSD = msd.EinsteinMSD(u, select=selection, msd_type=dimension, fft=algorithm).run()
+#    
+#    nframes = MSD.n_frames
+#    print(' ')
+#    print('To calculate the time between frames use: dt x nstxout (from .mdp)')
+#    timestep=float(input('What is the time between frames? Give answer in nanoseconds: '))
+#    sim_time = np.arange(nframes)*timestep
+#    
+#    fig, fig_name=plt.subplots()
+#    fig_name.plot(sim_time, MSD.results.timeseries)
+#    fig_name.set_xlabel('Simulation time (ns)')
+#    fig_name.set_ylabel('Mean-Squared Displacement')
+#    fig_name.set_title(input("Enter a title: "))
+#    plt.show()
+#    
+#    start_time = int(input('What is the time at the start of the linear portion? '))
+#    start_index = int(start_time/timestep)
+#    end_time = int(input('What is the time at the end of the linear portion? '))
+#    end_index = int(end_time/timestep)
+#    linear_model = linregress(sim_time[start_index:end_index],
+#                              MSD.results.timeseries[start_index:end_index])
+#    
+#    fig, linear_plot=plt.subplots()
+#    linear_plot.plot(sim_time, linear_model.intercept + linear_model.slope*sim_time)
+#    linear_plot.set_xlabel('Simulation time (ns)')
+#    linear_plot.set_ylabel('Mean-Squared Displacement')
+#    linear_plot.set_title('Linear model of MSD')
+#    plt.show()
+#    
+#    slope = linear_model.slope
+#    error = linear_model.rvalue
+#    
+#    D = slope*1/(2*MSD.dim_fac)
+#
+#    # Two-sided inverse Students t-distribution
+#    # p - probability, df - degrees of freedom
+#    tinv = lambda p, df: abs(t.ppf(p/2, df))   
+#    ts = tinv(0.05, len(sim_time)-2)
+#
+#    print(' ')
+#    print(f'The coefficient of determination (R-squared) of the linear model is: {error**2:.6f}')
+#    print('The diffusion coefficient is estimated to be: ', D)
+#    print(f'The 95% confidence interval on the slope is: {slope:.6f} +/- {ts*linear_model.stderr:.6f}")')
+#
 #%%
 
 # RMSD
@@ -643,8 +644,23 @@ def atom_contacts(u, atom_group1, atom_group2, contact_rad):
     at_con_plot.set_title(input('Enter a title for graph of contacts vs time: '))
 
     
+
+if __name__ == "__main__":
     
+    tpr = sys.argv[1]                                                        
+    trr = sys.argv[2]
     
-    
-    
-    
+    u=mda.Universe(tpr, trr,tpr_resid_from_one=False)
+     
+    SOL_upper=u.select_atoms('resname SOL and prop z > 89')
+    Cs_upper=u.select_atoms('resname Cs ')
+    clay=u.select_atoms('resname NON*  and prop z > 89.32')
+    print(clay)
+    print(Cs_upper)
+    average_rdf(clay, Cs_upper)
+     
+    plt.show() 
+     
+    #clay=mda.AtomGroup(u.select_atoms('resname NON*'))
+    #atomgroup_coords(clay)
+    #position_density(tpr, trr, 'resname NON*', False)

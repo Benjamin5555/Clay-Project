@@ -16,13 +16,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# create Universe
-N1_Mg_eqd=mda.Universe("eq_d_spacing_06.tpr", "eq_d_spacing_06.trr")
-print("N1_Mg_eqd is: ", N1_Mg_eqd)
-print("The universe N1_Mg_eqd has a trajectory: ", hasattr(N1_Mg_eqd, 'trajectory'))
+# create Universea
+u=mda.Universe("../../TestFiles/control.tpr", "../../TestFiles/control.trr")
+
+print("u is: ", u)
+print("The universe u has a trajectory: ", hasattr(u, 'trajectory'))
 
 # assign clay AtomGroup
-clay=mda.AtomGroup(N1_Mg_eqd.select_atoms('resname NON*'))
+clay=mda.AtomGroup(u.select_atoms('resname NON*'))
 
 # Minimum and maximum z-coordinate
 clay_pos=clay.positions
@@ -33,9 +34,9 @@ print("Maximum z-coordinate of clay is ", clay_pos_max [2])
 print("Minimum z-coordinate of clay is ", clay_pos_min [2]) 
 
 # assign bulk ions AtomGroup
-dynamic_ions=mda.AtomGroup(N1_Mg_eqd.select_atoms('(resname Mg or resname Cl) and (prop z > 89.36 or prop z < 43.18)', updating=True))
-dynamic_cations=mda.AtomGroup(N1_Mg_eqd.select_atoms('(resname Mg) and (prop z > 89.36 or prop z < 43.18)', updating=True))
-dynamic_anions=mda.AtomGroup(N1_Mg_eqd.select_atoms('(resname Cl) and (prop z > 89.36 or prop z < 43.18)', updating=True))
+dynamic_ions=mda.AtomGroup(u.select_atoms('(resname Cs or resname Cl) and (prop z > 89.36 or prop z < 43.18)', updating=True))
+dynamic_cations=mda.AtomGroup(u.select_atoms('(resname Cs) and (prop z > 89.36 or prop z < 43.18)', updating=True))
+dynamic_anions=mda.AtomGroup(u.select_atoms('(resname Cl) and (prop z > 89.36 or prop z < 43.18)', updating=True))
 
 # ionic z-density profiles
 ionic_density=lin.LinearDensity(dynamic_ions, binsize=0.25).run()
@@ -43,12 +44,16 @@ cationic_density=lin.LinearDensity(dynamic_cations, binsize=0.25).run()
 anionic_density=lin.LinearDensity(dynamic_anions, binsize=0.25).run()
 
 # z-values
-index=pd.Index(np.linspace(0, 133.3808, 534))
-
+z_max = u.dimensions[3]
 #%%
 
 # create dataframe from profiles
 ionic_density_df=pd.DataFrame(ionic_density.results['z'], columns = ['pos', 'char'])
+
+num_entries = len(ionic_density_df['pos'])
+
+index=pd.Index(np.linspace(0, z_max, num_entries))
+
 ionic_density_df=ionic_density_df.set_index(index)
 ionic_density_df.reset_index(inplace=True)
 ionic_density_df=ionic_density_df.rename(columns = {'index':'z-coordinate'})
@@ -78,44 +83,45 @@ anionic_density_df_norm['char']=(anionic_density_df['char']-anionic_density_df['
 
 #%%
 fig, ion_char=plt.subplots()
-ion_char.plot(np.linspace(0, 133.3808, 534), ionic_density.results['z']['char'])
+ion_char.plot(np.linspace(0, z_max, num_entries), ionic_density.results['z']['char'])
 ion_char.set_xlabel("z-coordinate (Å)")
 ion_char.set_ylabel("Charge density")
 ion_char.set_title("ionic z-density profile")
-
-#%%
+##%%
 fig, cat_char=plt.subplots()
-cat_char.plot(np.linspace(0, 133.3808, 534), cationic_density.results['z']['char'])
+cat_char.plot(np.linspace(0, z_max, num_entries), cationic_density.results['z']['char'])
 cat_char.set_xlabel("z-coordinate (Å)")
 cat_char.set_ylabel("Charge density")
 cat_char.set_title("cationic z-density profile")
-
-#%%
+#
+##%%
 fig, ani_char=plt.subplots()
-ani_char.plot(np.linspace(0, 133.3808, 534), anionic_density.results['z']['char'])
+ani_char.plot(np.linspace(0, z_max, num_entries), anionic_density.results['z']['char'])
 ani_char.set_xlabel("z-coordinate (Å)")
 ani_char.set_ylabel("Charge density")
 ani_char.set_title("anionic z-density profile")
 
 #%%
 fig, cat_pos=plt.subplots()
-cat_pos.plot(np.linspace(0, 133.3808, 534), cationic_density.results['z']['pos'])
+cat_pos.plot(np.linspace(0, z_max, num_entries), cationic_density.results['z']['pos'])
 cat_pos.set_xlabel("z-coordinate (Å)")
 cat_pos.set_ylabel("Position density")
 cat_pos.set_title("cationic z-density profile")
 
 #%%
 fig, cat_dens=plt.subplots()
-cat_dens.plot(np.linspace(0, 133.3808, 534), cationic_density.results['z']['char'], '--', color='black', label="charge density")
-cat_dens.plot(np.linspace(0, 133.3808, 534), cationic_density.results['z']['pos'], ':', label="mass density")
+cat_dens.plot(np.linspace(0, z_max, num_entries), cationic_density.results['z']['char'], '--', color='black', label="charge density")
+cat_dens.plot(np.linspace(0, z_max, num_entries), cationic_density.results['z']['pos'], ':', label="mass density")
 cat_dens.set_xlabel("z-coordinate (Å)")
 cat_dens.set_ylabel("density")
 cat_dens.legend()
 
 #%%
 fig, cat_norm=plt.subplots()
-cat_norm.plot(cationic_density_df_norm['z-coordinate'], cationic_density_df_norm['char'], '--', color='black', label="normalised charge density")
-cat_norm.plot(cationic_density_df_norm['z-coordinate'], cationic_density_df_norm['pos'], ':', label="normalised mass density")
+cat.plot(cationic_density_df['z-coordinate'], cationic_density_df['char'], '--', color='black', label="normalised charge density")
+cat_norm.plot(cationic_density_df['z-coordinate'], cationic_density_df['pos'], ':', label="normalised mass density")
 cat_norm.set_xlabel("z-coordinate (Å)")
 cat_norm.set_ylabel("normalised density")
 cat_norm.legend()
+plt.show()
+
