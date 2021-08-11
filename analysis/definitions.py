@@ -324,9 +324,12 @@ def average_rdf(atomgroup1, atomgroup2, bins=75, rdf_range=(0.0,15.0)):
     av_rdf=rdf.InterRDF(atomgroup1, atomgroup2, 
                         nbins=bins,
                         range=rdf_range).run()
-    av_rdf_plot=plt.plot(av_rdf.bins, av_rdf.rdf)
+    label = str(np.unique(atomgroup1.resnames))+" to " +str(np.unique(atomgroup2.types))
+    av_rdf_plot=plt.plot(av_rdf.bins, av_rdf.rdf,label=label)
     plt.xlabel('Radius (Å)')
     plt.ylabel('Radial distribution')
+    plt.legend()
+    plt.savefig(str(label)+".png") 
     return av_rdf_plot
 
 #def intraAG_average_rdf(atomgroup1, bins=75, rdf_range=(0.0,15.0), exclusion=None):
@@ -646,20 +649,20 @@ def atom_contacts(u, atom_group1, atom_group2, contact_rad):
     
 
 if __name__ == "__main__":
-    
+     
     tpr = sys.argv[1]                                                        
     trr = sys.argv[2]
     
     u=mda.Universe(tpr, trr,tpr_resid_from_one=False)
      
-    SOL_upper=u.select_atoms('resname SOL and prop z > 89')
-    Cs_upper=u.select_atoms('resname Cs ')
-    clay=u.select_atoms('resname NON*  and prop z > 89.32')
-    print(clay)
-    print(Cs_upper)
-    average_rdf(clay, Cs_upper)
-     
-    plt.show() 
+    #SOL_upper=u.select_atoms('resname SOL and prop z > 89')
+    #Cs_upper=u.select_atoms('resname Cs ')
+    #clay=u.select_atoms('resname NON*  and prop z > 89.32')
+    #print(clay)
+    #print(Cs_upper)
+    #average_rdf(clay, Cs_upper)
+    # 
+    #plt.show() 
      
     #clay=mda.AtomGroup(u.select_atoms('resname NON*'))
     #atomgroup_coords(clay)
