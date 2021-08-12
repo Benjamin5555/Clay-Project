@@ -20,11 +20,12 @@ sys.path.append("../../../")
 sys.path.append("ClayAnalysis")
 
 from clayAnalysis import ClayAnalysis 
-
+import clayAnalysis
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 import sys
 
@@ -40,9 +41,15 @@ cal = ClayAnalysis(u)
 surfaces = cal.generate_surface_group("waters")
 w_surf_grp = cal.combine_atomgroups(surfaces[0])+cal.combine_atomgroups(surfaces[1])
 print(np.unique(w_surf_grp.types))
+
 w_surf_grp= w_surf_grp.select_atoms("type o*")
+
 ATs = u.atoms.select_atoms("type at*")
 STs = u.atoms.select_atoms("type st*")
+clayAnalysis.plot_group(w_surf_grp,label="Waters")
+clayAnalysis.plot_group(ATs)
+clayAnalysis.plot_group(STs)
+plt.show()
 	
 for ions in ["resname Cs", "resname K", "resname Na"]:
     ion_grp = u.atoms.select_atoms(ions)
