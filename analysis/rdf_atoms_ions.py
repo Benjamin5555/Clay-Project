@@ -4,6 +4,14 @@
 Created on Fri Jun 25 15:39:04 2021
 
 @author: sarah
+
+Creates a plot of the radial distribution of clay surface atoms (ATs, STs and oxygens) to a set of 
+cations (Cs, K, Na edit as necessary).
+
+Args:
+    tpr: Topology file name
+    trr: Trajectory file name
+    sys: describes name of system
 """
 
 # Average radial distribution function for two groups of atoms

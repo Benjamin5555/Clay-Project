@@ -4,6 +4,24 @@
 Created on Fri Jul  9 10:59:09 2021
 
 @author: sarah
+
+
+Removes ions that are very close to the surface of the clay in the initial time step and reinserts 
+them away from the surface so that there are no cations that start the simulation adsorbed (which 
+may mess up adsorption times calculation)
+
+Also acts to reorders the .gro file such that it matches that of a topology file, required for 
+gromacs
+
+Args:
+    topology_path: path to topology of system
+    gro_path: path to input .gro coordinates file of system where ions can be `at' surface
+    out_gro_path: output .gro path with ions reinserted away from surface
+    ions to move in order appear in topology: Ordering of ions in the topology file (unique i.e. Cs \n Cs \n Ca  is just Cs Ca)
+
+Examples:
+    >>> $ python3 reinsert_ions.py topo.top in.gro out.gro Cs Cl
+
 """
 
 import pathlib as pl
